@@ -15,6 +15,9 @@ case $choice in
         logstash) echo "you select logstash"
                 ansible-playbook ./ansible/logstash_playbook.yml
                 ;;
+        kafka) echo "you select kafka"
+                ansible-playbook ./ansible/kafka.yml
+                ;;
         quit) echo "Quitting" exit
                 ;;
         *) echo "default selection";;
