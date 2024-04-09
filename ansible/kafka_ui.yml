@@ -1,0 +1,30 @@
+---
+- name: Install Kafka UI on Docker and connect to Kafka cluster
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Create Docker network
+      docker_network:
+        name: my-network
+
+    - name: Install Docker if not already installed
+      package:
+        name: docker
+        state: present
+
+    - name: Pull Kafka UI Docker image
+      docker_image:
+        name: "provectuslabs/kafka-ui"
+        source: pull
+
+    - name: Run Kafka UI container
+      docker_container:
+        name: kafka-ui-container
+        image: "provectuslabs/kafka-ui"
+        ports:
+          - "8090:8080"  # Assuming Kafka UI runs on port 8080
+        env:
+          KAFKA_BROKER_HOST: "localhost"
+          KAFKA_BROKER_PORT: "9092"
+        networks:
+          - name: my-network  

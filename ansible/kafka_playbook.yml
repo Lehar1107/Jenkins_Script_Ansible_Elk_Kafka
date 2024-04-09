@@ -1,0 +1,163 @@
+---
+- name: Install and Run Zookeeper, Kafka Broker, and Kafka Server on Docker Containers
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Create Docker network
+      docker_network:
+        name: my-network
+
+    - name: Run Zookeeper container
+      docker_container:
+        name: zookeeper
+        image: wurstmeister/zookeeper
+        state: started
+        ports:
+          - "2181:2181"
+        networks:
+          - name: my-network
+
+    - name: Run Kafka Broker container
+      docker_container:
+        name: kafka
+        image: wurstmeister/kafka
+        state: started
+        ports:
+          - "9092:9092"  # Kafka port
+        env:
+          KAFKA_ADVERTISED_HOST_NAME: localhost
+          KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+        networks:
+          - name: my-network
+
+
+# ---
+# - name: Install and Run Zookeeper, Kafka Broker, and Kafka Server on Docker Containers
+#   hosts: localhost
+#   become: true
+#   tasks:
+#     - name: Create Docker network
+#       docker_network:
+#         name: my-network
+
+#     - name: Run Zookeeper container
+#       docker_container:
+#         name: zookeeper
+#         image: wurstmeister/zookeeper
+#         state: started
+#         ports:
+#           - "2181:2181"
+#         networks:
+#           - name: my-network
+
+#     - name: Wait for Zookeeper to start
+#       shell: docker exec zookeeper /bin/bash -c 'echo stat | nc localhost 2181'
+#       register: zookeeper_status
+#       until: zookeeper_status.stdout_lines[0] is search("Zookeeper version")
+#       retries: 10
+#       delay: 10
+
+#     - name: Run Kafka Broker container
+#       docker_container:
+#         name: kafka
+#         image: wurstmeister/kafka
+#         state: started
+#         ports:
+#           - "9092:9092"  # Kafka port
+#         env:
+#           KAFKA_ADVERTISED_HOST_NAME: localhost
+#           KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+#         networks:
+#           - name: my-network
+
+#     - name: Run Kafka Server container
+#       docker_container:
+#         name: kafka-server
+#         image: wurstmeister/kafka
+#         state: started
+#         ports:
+#           - "9093:9093"  # Kafka port for server
+#         env:
+#           KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka-server:9093"
+#           KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT"
+#           KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+#           KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+#         networks:
+#           - name: my-network
+
+
+# ---
+# - name: Install and Run Zookeeper and Kafka on Docker Containers
+#   hosts: localhost
+#   become: true
+#   tasks:
+#     - name: Create Docker network
+#       docker_network:
+#         name: my-network
+
+#     - name: Run Zookeeper container
+#       docker_container:
+#         name: zookeeper
+#         image: wurstmeister/zookeeper
+#         state: started
+#         ports:
+#           - "2181:2181"
+#         networks:
+#           - name: my-network
+
+#     - name: Wait for Zookeeper to start
+#       shell: docker exec zookeeper /bin/bash -c 'echo stat | nc localhost 2181'
+#       register: zookeeper_status
+#       until: zookeeper_status.stdout_lines[0] is search("Zookeeper version")
+#       retries: 10
+#       delay: 10
+
+#     - name: Run Kafka container
+#       docker_container:
+#         name: kafka
+#         image: wurstmeister/kafka
+#         state: started
+#         ports:
+#           - "9092:9092"  # Kafka port
+#         env:
+#           KAFKA_ADVERTISED_HOST_NAME: localhost
+#           KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+#         networks:
+#           - name: my-network
+
+#     - name: Run Kafka Server container
+#       docker_container:
+#         name: kafka-server
+#         image: wurstmeister/kafka
+#         state: started
+#         ports:
+#           - "9093:9093"  # Kafka port for server
+#         env:
+#           KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka-server:9093"
+#           KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: "PLAINTEXT:PLAINTEXT"
+#           KAFKA_INTER_BROKER_LISTENER_NAME: "PLAINTEXT"
+#           KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+#         networks:
+#           - name: my-network
+
+# ---
+# - name: Deploy Kafka on Docker containers
+#   hosts: localhost
+#   become: true
+#   tasks:
+#     - name: Include roles for Kafka setup
+#       include_role:
+#         name: "{{ item }}"
+#       with_items:
+#         - kafka/zookeeper
+#         - kafka/kafka_server
+#         - kafka/kafka_topic
+
+
+# ---
+# - name: Deploy Kafka and Zookeeper
+#   hosts: localhost
+#   become: true
+#   roles:
+#     - zookeeper
+#     - kafka

@@ -1,0 +1,58 @@
+
+---
+- name: Create Docker network
+  docker_network:
+    name: my-network
+
+- name: Ensure config directory present
+  file:
+    path: "/opt/elasticsearch"
+    state: directory
+    owner: 1000
+    group: 1000
+    mode: 0775
+    force: yes
+
+- name: Ensure template file is present
+  template:
+    src: 'elasticsearch.yml'
+    dest: "/opt/elasticsearch/elasticsearch.yml"
+    owner: 1000
+    group: 1000
+    mode: 0775
+    force: yes
+
+- name: Pull elasticsearch docker image
+  docker_image:
+    name: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    source: pull
+
+- name: Run Elasticsearch using Docker
+  docker_container:
+    name: elasticsearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
+    state: started
+    restart_policy: always
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    env:
+      ES_JAVA_OPTS: "-Xms512m -Xmx512m"
+      ES_VM_MAX_MAP_COUNT: "262144"
+    volumes:
+      - /opt/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+    networks:
+      - name: my-network
+      
+ 
+- name: Wait for Elasticsearch cluster to get ready
+  uri:
+    url: http://localhost:9200/_cluster/health?pretty
+    method: GET
+    status_code: 200
+    validate_certs: false
+  register: cluster_health
+  until: cluster_health.status == 200
+  retries: 20
+  delay: 10
+

@@ -1,0 +1,68 @@
+---
+- name: Install and Run Zookeeper and Kafka Server on Docker Containers
+  hosts: localhost
+  become: true
+  tasks:
+    - name: Create Docker network
+      docker_network:
+        name: my-network
+
+    - name: Run Zookeeper container
+      docker_container:
+        name: zookeeper
+        image: wurstmeister/zookeeper
+        state: started
+        ports:
+          - "2181:2181"
+        env:
+          ALLOW_ANONYMOUS_LOGIN: "yes"
+        networks:
+          - name: my-network
+
+    - name: Run Kafka server container
+      docker_container:
+        name: kafka-server
+        image: wurstmeister/kafka
+        state: started
+        ports:
+          - "9092:9092"  # Kafka port
+        env:
+          KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+          ALLOW_PLAINTEXT_LISTENER: "yes"  # Specify the listener
+          KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-server:9092 
+          KAFKA_LISTENERS: PLAINTEXT://kafka-server:9092 
+        networks:
+          - name: my-network
+
+- name: Install Kafka UI on Docker and connect to Kafka cluster
+  hosts: localhost
+  become: yes
+  tasks:
+    - name: Pull Kafka UI Docker image
+      docker_image:
+        name: "provectuslabs/kafka-ui"
+        source: pull
+
+    - name: Run Kafka UI container
+      docker_container:
+        name: kafka-ui-container
+        image: "provectuslabs/kafka-ui"
+        ports:
+          - "8090:8080"  # Assuming Kafka UI runs on port 8080
+        env:
+          KAFKA_BROKER_HOST: kafka-server
+          KAFKA_BROKER_PORT: "9092"  # Use the Kafka Server port
+          
+          #AUTH_TYPE: LOGIN_FORM
+          #SPRING_SECURITY_USER_NAME: kafka-ui
+          #SPRING_SECURITY_USER_PASSWORD: "kafka_ui"
+          LOGGING_LEVEL_ROOT: warn
+          LOGGING_LEVEL_COM_PROVECTUS: warn
+          KAFKA_CLUSTERS_0_NAME: kafka-server
+          KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: "PLAINTEXT://kafka-server:9092"
+          KAFKA_CLUSTERS_0_ZOOKEEPER: "zookeeper:2182"
+          KAFKA_CLUSTERS_0_PROPERTIES_SASL_MECHANISM: PLAIN
+          #KAFKA_CLUSTERS_0_PROPERTIES_SASL_JAAS_CONFIG: 'org.apache.kafka.common.security.plain.PlainLoginModule required username="admin" password="kafka_ui";'
+          KAFKA_CLUSTERS_0_PROPERTIES_RECONNECT_BACKOFF_MAX_MS: "300000"
+        networks:
+          - name: my-network
