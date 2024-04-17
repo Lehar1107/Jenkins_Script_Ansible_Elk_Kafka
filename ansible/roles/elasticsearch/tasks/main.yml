@@ -22,6 +22,82 @@
     mode: 0775
     force: yes
 
+- name: Ensure template file is present
+  template:
+    src: 'instance.yml'
+    dest: "/opt/elasticsearch/instance.yml"
+    owner: 1000
+    group: 1000
+    mode: 0775
+    force: yes
+
+- name: Ensure config directory present
+  file:
+    path: "/opt/elasticsearch/config"
+    state: directory
+    owner: 1000
+    group: 1000
+    mode: 0775
+    force: yes
+
+# - name: Ensure certs directory present
+#   file:
+#     path: "/opt/elasticsearch/config/certs"
+#     state: directory
+#     owner: 1000
+#     group: 1000
+#     mode: 0775
+#     force: yes
+
+# - name: Ensure ca directory present
+#   file:
+#     path: "/opt/elasticsearch/config/certs/ca"
+#     state: directory
+#     owner: 1000
+#     group: 1000
+#     mode: 0775
+#     force: yes
+
+# - name: Copy ca.crt to destination
+#   template:
+#     src: 'ca.crt'
+#     dest: "/opt/elasticsearch/config/certs/ca/ca.crt"
+#     owner: 1000
+#     group: 1000
+#     mode: 0775
+#     force: yes
+#     remote_src: true 
+
+# - name: Ensure template file is present
+#   template:
+#     src: 'ca.key'
+#     dest: "/opt/elasticsearch/config/certs/ca/ca.key"
+#     owner: 1000
+#     group: 1000
+#     mode: 0775
+#     force: yes
+
+
+# - name: Ensure template file is present
+#   template:
+#     src: 'node1.key'
+#     dest: "/opt/elasticsearch/config/certs/node1/node1.key"
+#     owner: 1000
+#     group: 1000
+#     mode: 0775
+#     force: yes
+
+
+# - name: Ensure template file is present
+#   template:
+#     src: 'node1.crt'
+#     dest: "/opt/elasticsearch/config/certs/node1/node1.crt"
+#     owner: 1000
+#     group: 1000
+#     mode: 0775
+#     force: yes
+
+
 - name: Pull elasticsearch docker image
   docker_image:
     name: docker.elastic.co/elasticsearch/elasticsearch:7.17.0
@@ -41,6 +117,11 @@
       ES_VM_MAX_MAP_COUNT: "262144"
     volumes:
       - /opt/elasticsearch/elasticsearch.yml:/usr/share/elasticsearch/config/elasticsearch.yml
+      - /opt/elasticsearch/instance.yml:/usr/share/elasticsearch/config/instance.yml
+      - /opt/elasticsearch/config/certs/ca/ca.crt:/usr/share/elasticsearch/config/certs/ca/ca.crt
+      - /opt/elasticsearch/config/certs/ca/ca.key:/usr/share/elasticsearch/config/certs/ca/ca.key
+      - /opt/elasticsearch/config/certs/node1/node1.crt":/usr/share/elasticsearch/config/certs/node1/node1.crt"
+      - /opt/elasticsearch/config/certs/node1/node1.key":/usr/share/elasticsearch/config/certs/node1/node1.key"
     networks:
       - name: my-network
       
